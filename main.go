@@ -54,65 +54,79 @@ func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 
 	case http.MethodGet:
-		language := req.URL.Query().Get("lang")
-		if len(language) == 0 {
-			fmt.Fprintf(w, "Please provide a language as query parameter. Ex: /hello?lang=en")
-			return
-		}
-
-		greet, ok := g[language]
-		fmt.Printf("greet[%s]=%s", language, greet)
-		if !ok {
-			fmt.Fprintf(w, "I don't know how to greet in '%s'. Learn me how!", language)
-			return
-		}
-
-		fmt.Fprintf(w, "%s", greet)
+		GetGreetingsHandler(w, req)
 		return
 
 	case http.MethodPost:
-		if contentType := req.Header.Get("Content-Type"); contentType != "application/json" {
-			fmt.Fprintf(w, "only accepts %s for body, not %s", "application/json", contentType)
-			return
-		}
-
-		reqBody, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			panic(err)
-		}
-
-		var greetRequest GreetRequest
-		err = json.Unmarshal(reqBody, &greetRequest)
-		if err != nil {
-			fmt.Fprintf(w,
-				`unable to parse the body: %s
-				 please provide a greeting like {"language": "fr", "hello": "bonsoir"}`,
-				reqBody)
-		}
-
-		if len(greetRequest.Greet) == 0 || len(greetRequest.Language) == 0 {
-			fmt.Fprintf(w,
-				`Please provide a new greeting, for example: {"language": "fr", "hello": "bonsoir"}`)
-			return
-		}
-
-		err = g.Add(greetRequest.Language, greetRequest.Greet)
-		if err != nil {
-			fmt.Printf("Cannot add greet '%s' for language '%s': %s", greetRequest.Greet, greetRequest.Language, err)
-			return
-		}
-		w.WriteHeader(201)
+		PostGreetingsHandler(w, req)
 		return
 
 	default:
 		http.NotFoundHandler().ServeHTTP(w, req)
 		return
 	}
+}
 
-	// func BadRequestHandler(w http.ResponseWriter, req *http.Request, err error) {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	fmt.Fprintf
-	// 	return
-	// }
+// GetGreetingsHandler handles GET greetings requests
+func GetGreetingsHandler(w http.ResponseWriter, req *http.Request) {
+	language := req.URL.Query().Get("lang")
+	if len(language) == 0 {
+		BadRequestHandler(w, req, fmt.Errorf("Please provide a language as 'lang' query parameter. Ex: /hello?lang=en"))
+		return
+	}
 
+	greet, ok := g[language]
+	fmt.Printf("greet[%s]=%s", language, greet)
+	if !ok {
+		BadRequestHandler(w, req, fmt.Errorf("I don't know how to greet in '%s'. Learn me how with a POST method", language))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "%s", greet)
+	return
+}
+
+// PostGreetingsHandler handles POST greetings requests
+func PostGreetingsHandler(w http.ResponseWriter, req *http.Request) {
+	if contentType := req.Header.Get("Content-Type"); contentType != "application/json" {
+		BadRequestHandler(w, req, fmt.Errorf("only accepts %s for body, not %s", "application/json", contentType))
+		return
+	}
+
+	reqBody, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		BadRequestHandler(w, req, fmt.Errorf("unable to read body: %s", err))
+		return
+	}
+
+	var greetRequest GreetRequest
+	err = json.Unmarshal(reqBody, &greetRequest)
+	if err != nil {
+		BadRequestHandler(w, req, fmt.Errorf(
+			`unable to parse the body: %s
+			 please provide a greeting like {"language": "fr", "hello": "bonsoir"}`,
+			string(reqBody)))
+		return
+	}
+
+	if len(greetRequest.Greet) == 0 || len(greetRequest.Language) == 0 {
+		BadRequestHandler(w, req, fmt.Errorf(`Please provide a new greeting, for example: {"language": "fr", "hello": "bonsoir"}`))
+		return
+	}
+
+	err = g.Add(greetRequest.Language, greetRequest.Greet)
+	if err != nil {
+		BadRequestHandler(w, req, fmt.Errorf("Cannot add greet '%s' for language '%s': %s", greetRequest.Greet, greetRequest.Language, err))
+		return
+	}
+	w.WriteHeader(201)
+	return
+}
+
+// BadRequestHandler handle incorrect requests
+func BadRequestHandler(w http.ResponseWriter, req *http.Request, err error) {
+	w.WriteHeader(http.StatusBadRequest)
+	fmt.Fprintf(w, err.Error())
+	return
 }
