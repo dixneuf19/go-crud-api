@@ -21,8 +21,25 @@ http DELETE "localhost:8080/hello?lang=it"
 http GET "localhost:8080/hello?lang=it"
 ```
 
+You can specify the host, port and provider with args.
+
+```
+go run main.go -host localhost -port 8080 -provider map
+```
+
+Current greetings *providers* are:
+- map: in memory
+- redis: TO IMPLEMENT
+
 ## Tests
 
 ```
 go test
 ```
+
+## What's next ?
+
+- Logging
+- Docker
+- Docker-compose
+- Redis
