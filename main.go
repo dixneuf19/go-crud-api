@@ -1,12 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/dixneuf19/go-crud-api/greetings"
 )
+
+// GreetRequest is the standart format to add a new greet
+type GreetRequest struct {
+	Language string `json:"language"`
+	Greet    string `json:"hello"`
+}
 
 func main() {
 
@@ -41,6 +49,7 @@ func HelloHandler(w http.ResponseWriter, req *http.Request) {
 // GreetingsHandler returns the appropriate greet for the given language
 // By default, it replies in english
 func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
+
 	switch req.Method {
 
 	case http.MethodGet:
@@ -59,9 +68,48 @@ func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "%s", greet)
 		return
 
+	case http.MethodPost:
+		if contentType := req.Header.Get("Content-Type"); contentType != "application/json" {
+			fmt.Fprintf(w, "only accepts %s for body, not %s", "application/json", contentType)
+			return
+		}
+
+		reqBody, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		var greetRequest GreetRequest
+		err = json.Unmarshal(reqBody, &greetRequest)
+		if err != nil {
+			fmt.Fprintf(w,
+				`unable to parse the body: %s
+				 please provide a greeting like {"language": "fr", "hello": "bonsoir"}`,
+				reqBody)
+		}
+
+		if len(greetRequest.Greet) == 0 || len(greetRequest.Language) == 0 {
+			fmt.Fprintf(w,
+				`Please provide a new greeting, for example: {"language": "fr", "hello": "bonsoir"}`)
+			return
+		}
+
+		err = greetings.AddGreeting(greetRequest.Language, greetRequest.Greet)
+		if err != nil {
+			fmt.Printf("Cannot add greet '%s' for language '%s': %s", greetRequest.Greet, greetRequest.Language, err)
+			return
+		}
+		w.WriteHeader(201)
+		return
+
 	default:
 		http.NotFoundHandler().ServeHTTP(w, req)
 		return
 	}
+
+	// func BadRequestHandler(w http.ResponseWriter, req *http.Request, err error) {
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// 	return
+	// }
 
 }
