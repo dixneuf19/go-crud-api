@@ -4,18 +4,23 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dixneuf19/go-crud-api/greetings"
+	"github.com/dixneuf19/go-crud-api/server"
 )
 
 type testRequestParams struct {
 	Method  string
 	Path    string
+	Headers http.Header
+	Body    string
 	ExpCode int
 	ExpMsg  string
 }
 
 const msgNotFound = "404 page not found\n"
 
-func testHandler(t *testing.T, handlerFunc http.HandlerFunc, params testRequestParams) {
+func testHandlerFunc(t *testing.T, handlerFunc http.HandlerFunc, params testRequestParams) {
 	req := httptest.NewRequest(params.Method, params.Path, nil)
 	w := httptest.NewRecorder()
 
@@ -30,48 +35,67 @@ func testHandler(t *testing.T, handlerFunc http.HandlerFunc, params testRequestP
 	}
 }
 
-func TestHelloHandler(t *testing.T) {
+func testHandler(t *testing.T, handler http.Handler, params testRequestParams) {
+	req := httptest.NewRequest(params.Method, params.Path, nil)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	if status := w.Code; status != params.ExpCode {
+		t.Errorf("expecting %d instead of %d", params.ExpCode, status)
+	}
+
+	if body := w.Body.String(); body != params.ExpMsg {
+		t.Errorf("expecting body '%s', not '%s'", params.ExpMsg, body)
+	}
+}
+
+func TestHelloHandlerFunc(t *testing.T) {
 
 	requests := []testRequestParams{
 		{
-			http.MethodGet,
-			"/",
-			http.StatusOK,
-			"Hello",
+			Method:  http.MethodGet,
+			Path:    "/",
+			ExpCode: http.StatusOK,
+			ExpMsg:  "Hello",
 		},
 		{
-			http.MethodPost,
-			"/",
-			http.StatusNotFound,
-			msgNotFound,
+			Method:  http.MethodPost,
+			Path:    "/",
+			ExpCode: http.StatusNotFound,
+			ExpMsg:  msgNotFound,
 		},
 	}
 
 	for _, r := range requests {
-		testHandler(t, HelloHandler, r)
+		testHandlerFunc(t, server.HelloHandlerFunc, r)
 	}
 
 }
 
 func TestGetGreetingsHandler(t *testing.T) {
 
+	gp := greetings.NewGreetingsMap()
+	gp.Add("en", "hello")
+	gp.Add("fr", "bonjour")
+
 	requests := []testRequestParams{
 		{
-			http.MethodGet,
-			"/hello",
-			http.StatusBadRequest,
-			"Please provide a language as 'lang' query parameter. Ex: /hello?lang=en",
+			Method:  http.MethodGet,
+			Path:    "/hello",
+			ExpCode: http.StatusBadRequest,
+			ExpMsg:  "Please provide a language as 'lang' query parameter. Ex: /hello?lang=en",
 		},
 		{
-			http.MethodGet,
-			"/hello?language=en",
-			http.StatusBadRequest,
-			"Please provide a language as 'lang' query parameter. Ex: /hello?lang=en",
+			Method:  http.MethodGet,
+			Path:    "/hello?language=en",
+			ExpCode: http.StatusBadRequest,
+			ExpMsg:  "Please provide a language as 'lang' query parameter. Ex: /hello?lang=en",
 		},
 	}
 
 	for _, r := range requests {
-		testHandler(t, GreetingsHandler, r)
+		testHandler(t, &server.GreetingsHandler{GP: gp}, r)
 	}
 
 }
