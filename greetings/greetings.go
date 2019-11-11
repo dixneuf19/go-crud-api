@@ -1,18 +1,23 @@
 package greetings
 
-var greetings = make(map[string]string)
+import (
+	"fmt"
+)
 
-// GetGreetings returns the greetings map
-func GetGreetings() map[string]string {
-	return greetings
+// Greetings is a greeting for a specified language
+type Greetings map[string]string
+
+// NewGreetings returns a new greetings struct
+func NewGreetings() Greetings {
+	return make(map[string]string)
 }
 
-// AddGreeting add or modify a greeting
+// Add or modify a greeting
 // return true if succesful
-func AddGreeting(lang, greet string) bool {
-	if len(lang) == 2 {
-		greetings[lang] = greet
-		return true
+func (g Greetings) Add(lang, greet string) error {
+	if len(lang) == 0 {
+		return fmt.Errorf("empty string is not a valid language")
 	}
-	return false
+	g[lang] = greet
+	return nil
 }

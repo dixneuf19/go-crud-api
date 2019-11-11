@@ -16,10 +16,11 @@ type GreetRequest struct {
 	Greet    string `json:"hello"`
 }
 
-func main() {
+var g greetings.Greetings = greetings.NewGreetings()
 
-	greetings.AddGreeting("en", "hello")
-	greetings.AddGreeting("fr", "bonjour")
+func main() {
+	g.Add("en", "hello")
+	g.Add("fr", "bonjour")
 
 	http.HandleFunc("/", HelloHandler)
 	http.HandleFunc("/hello", GreetingsHandler)
@@ -59,7 +60,8 @@ func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		greet, ok := greetings.GetGreetings()[language]
+		greet, ok := g[language]
+		fmt.Printf("greet[%s]=%s", language, greet)
 		if !ok {
 			fmt.Fprintf(w, "I don't know how to greet in '%s'. Learn me how!", language)
 			return
@@ -94,7 +96,7 @@ func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		err = greetings.AddGreeting(greetRequest.Language, greetRequest.Greet)
+		err = g.Add(greetRequest.Language, greetRequest.Greet)
 		if err != nil {
 			fmt.Printf("Cannot add greet '%s' for language '%s': %s", greetRequest.Greet, greetRequest.Language, err)
 			return
@@ -109,6 +111,7 @@ func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
 
 	// func BadRequestHandler(w http.ResponseWriter, req *http.Request, err error) {
 	// 	w.WriteHeader(http.StatusBadRequest)
+	// 	fmt.Fprintf
 	// 	return
 	// }
 
