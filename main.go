@@ -61,6 +61,9 @@ func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
 		PostGreetingsHandler(w, req)
 		return
 
+	case http.MethodDelete:
+		DeleteGreetingsHandler(w, req)
+
 	default:
 		http.NotFoundHandler().ServeHTTP(w, req)
 		return
@@ -120,7 +123,25 @@ func PostGreetingsHandler(w http.ResponseWriter, req *http.Request) {
 		BadRequestHandler(w, req, fmt.Errorf("Cannot add greet '%s' for language '%s': %s", greetRequest.Greet, greetRequest.Language, err))
 		return
 	}
-	w.WriteHeader(201)
+	w.WriteHeader(http.StatusCreated)
+	return
+}
+
+// DeleteGreetingsHandler handles DELETE greetings requests
+func DeleteGreetingsHandler(w http.ResponseWriter, req *http.Request) {
+	language := req.URL.Query().Get("lang")
+	if len(language) == 0 {
+		BadRequestHandler(w, req, fmt.Errorf("Please provide a language as 'lang' query parameter. Ex: /hello?lang=en"))
+		return
+	}
+
+	err := g.Delete(language)
+	if err != nil {
+		BadRequestHandler(w, req, fmt.Errorf("unable to delete '%s' entry: %s", language, err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	return
 }
 
