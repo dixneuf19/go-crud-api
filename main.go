@@ -14,7 +14,6 @@ func main() {
 	greetings.AddGreeting("fr", "bonjour")
 
 	http.HandleFunc("/", HelloHandler)
-
 	http.HandleFunc("/hello", GreetingsHandler)
 
 	err := http.ListenAndServe(":8080", nil)
@@ -26,23 +25,43 @@ func main() {
 
 // HelloHandler greets you
 func HelloHandler(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprint(w, "Hello")
+	switch req.Method {
+
+	case http.MethodGet:
+		fmt.Fprint(w, "Hello")
+		return
+
+	default:
+		http.NotFoundHandler().ServeHTTP(w, req)
+		return
+	}
+
 }
 
 // GreetingsHandler returns the appropriate greet for the given language
 // By default, it replies in english
 func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
-	language := req.URL.Query().Get("lang")
-	// Default language is "en"
-	if len(language) == 0 {
-		fmt.Fprintf(w, "Please provide a language as query parameter. Ex: /hello?lang=en")
+	switch req.Method {
+
+	case http.MethodGet:
+		language := req.URL.Query().Get("lang")
+		if len(language) == 0 {
+			fmt.Fprintf(w, "Please provide a language as query parameter. Ex: /hello?lang=en")
+			return
+		}
+
+		greet, ok := greetings.GetGreetings()[language]
+		if !ok {
+			fmt.Fprintf(w, "I don't know how to greet in '%s'. Learn me how!", language)
+			return
+		}
+
+		fmt.Fprintf(w, "%s", greet)
+		return
+
+	default:
+		http.NotFoundHandler().ServeHTTP(w, req)
 		return
 	}
 
-	greet, ok := greetings.GetGreetings()[language]
-	if !ok {
-		fmt.Fprintf(w, "I don't know how to greet in '%s'. Learn me how!", language)
-		return
-	}
-	fmt.Fprintf(w, "%s", greet)
 }
