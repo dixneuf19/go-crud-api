@@ -55,7 +55,6 @@ func HelloHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // GreetingsHandler returns the appropriate greet for the given language
-// By default, it replies in english
 func GreetingsHandler(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Method {
