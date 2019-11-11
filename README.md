@@ -4,3 +4,25 @@ Small Golang project for an interview
 
 The goal is to develop a simple CRUD API using go and its `net/http` library.
 
+## Usage
+
+```
+go run main.go
+```
+
+You can then test it with `httpie`.
+
+```
+http GET "localhost:8080/hello?lang=fr"
+http GET "localhost:8080/hello?lang=it"
+http POST "localhost:8080/hello" "hello=hola" "language=it"
+http GET "localhost:8080/hello?lang=it"
+http DELETE "localhost:8080/hello?lang=it"
+http GET "localhost:8080/hello?lang=it"
+```
+
+## Tests
+
+```
+go test
+```
