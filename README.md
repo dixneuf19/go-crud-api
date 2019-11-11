@@ -43,3 +43,4 @@ go test
 - Docker
 - Docker-compose
 - Redis
+- CI/CD
