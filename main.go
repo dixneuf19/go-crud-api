@@ -16,9 +16,16 @@ type GreetRequest struct {
 	Greet    string `json:"hello"`
 }
 
-var g greetings.Greetings = greetings.NewGreetings()
+type greetingsProvider interface {
+	Get(string) (string, bool)
+	Add(string, string) error
+	Delete(string) error
+}
+
+var g greetingsProvider
 
 func main() {
+	g = greetings.NewGreetings()
 	g.Add("en", "hello")
 	g.Add("fr", "bonjour")
 
@@ -78,8 +85,7 @@ func GetGreetingsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	greet, ok := g[language]
-	fmt.Printf("greet[%s]=%s", language, greet)
+	greet, ok := g.Get((language))
 	if !ok {
 		BadRequestHandler(w, req, fmt.Errorf("I don't know how to greet in '%s'. Learn me how with a POST method", language))
 		return
