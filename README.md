@@ -29,7 +29,7 @@ go run main.go -host localhost -port 8080 -provider map
 
 Current greetings *providers* are:
 - map: in memory
-- redis: TO IMPLEMENT
+- redis: specify the host with "-redisHost"
 
 ## Tests
 
@@ -52,7 +52,4 @@ docker run -p "$PORT:8080" dixneuf19/go-crud-api
 ## What's next ?
 
 - Logging
-- Docker
 - Docker-compose
-- Redis
-- CI/CD
