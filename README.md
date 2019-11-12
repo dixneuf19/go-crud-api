@@ -37,6 +37,18 @@ Current greetings *providers* are:
 go test
 ```
 
+## Docker
+
+A dockerfile is available for deploying on a distributed environment.
+
+```
+#Define you custom port
+PORT=2000
+docker build -t dixneuf19/go-crud-api .
+docker run -p "$PORT:8080" dixneuf19/go-crud-api
+```
+
+
 ## What's next ?
 
 - Logging
