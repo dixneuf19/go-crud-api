@@ -1,0 +1,16 @@
+version: '3'
+services:
+  go-crud-api:
+    build: .
+    depends_on: 
+      - redis
+    image: dixneuf19/go-crud-api
+    ports:
+      - "8080:8080"
+    command: ["-provider", "redis", "-redisHost", "redis:6379"]
+
+
+  redis:
+    image: "redis:alpine"
+
+  

@@ -35,6 +35,7 @@ func main() {
 
 	greetServer := server.NewGreetingServer(address, gp)
 
+	log.Println("Launching the server!")
 	err := greetServer.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)

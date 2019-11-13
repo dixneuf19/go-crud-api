@@ -48,6 +48,10 @@ docker build -t dixneuf19/go-crud-api .
 docker run -p "$PORT:8080" dixneuf19/go-crud-api
 ```
 
+You also have a `docker-compose.yml` file to test the redis backend without installing it.
+
+Just `docker-compose up` to test it.
+
 
 ## What's next ?
 
